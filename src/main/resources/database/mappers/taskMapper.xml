@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.workmotion.app.project.dao.TaskDAO">
+    <sql id="getTask">
+        SELECT
+        t.*,
+        m.id as member_id,
+        m.name as member_name,
+        m.role_id AS member_role_id,
+        m.company_id AS member_company_id,
+        m.email AS member_email,
+        m.department_id AS member_department_id,
+        m.position_id AS member_position_id,
+        m.phone AS member_phone,
+        m2.name as writer_name,
+        m2.role_id AS writer_role_id,
+        m2.company_id AS writer_company_id,
+        m2.email AS writer_email,
+        m2.department_id AS writer_department_id,
+        m2.position_id AS writer_position_id,
+        m2.phone AS writer_phone,
+        a.NAME AS writer_avatar_name
+        FROM TASK t
+        LEFT JOIN TASK_MEMBER tm ON t.ID = tm.TASK_ID
+        LEFT JOIN MEMBER m ON tm.MEMBER_ID = m.ID
+        LEFT JOIN MEMBER m2 ON t.WRITER_ID = m2.ID
+        LEFT JOIN AVATAR a ON a.MEMBER_ID = m2.ID
+    </sql>
+
+    <select id="getTaskList" parameterType="Map" resultMap="getResult">
+        SELECT * FROM
+        (
+        SELECT ROWNUM rn, t.* FROM
+        (
+        SELECT
+        tsk.*, mv.*,
+        mv2.member_name as writer_name,
+        mv2.member_role_id AS writer_role_id,
+        mv2.member_company_id AS writer_company_id,
+        mv2.member_email AS writer_email,
+        mv2.member_department_id AS writer_department_id,
+        mv2.member_position_id AS writer_position_id,
+        mv2.member_phone AS writer_phone,
+        mv2.avatar_name AS writer_avatar_name
+        FROM TASK tsk
+        LEFT JOIN TASK_MEMBER tm ON tsk.ID = tm.TASK_ID
+        LEFT JOIN MEMBER_VIEW mv ON mv.MEMBER_ID = tm.MEMBER_ID
+        LEFT JOIN MEMBER_VIEW mv2 ON tsk.WRITER_ID = mv2.MEMBER_ID
+        ORDER BY CREATE_DT DESC
+        ) t
+        WHERE PROJECT_ID = #{project.id}
+        )
+        <if test="pager != null">
+            WHERE rn BETWEEN #{pager.startNum} AND #{pager.lastNum}
+        </if>
+    </select>
+    <resultMap id="getResult" type="TaskDTO" autoMapping="true">
+        <id column="id" property="id"/>
+        <result column="start_dt" property="start"/>
+        <result column="end_dt" property="end"/>
+        <association property="writer" javaType="MemberDTO" autoMapping="true" columnPrefix="writer_">
+            <result column="id" property="id"/>
+            <association property="avatar" javaType="Avatar" columnPrefix="avatar_" autoMapping="true"/>
+        </association>
+        <collection property="task_member" javaType="List" ofType="MemberDTO" autoMapping="true"
+                    resultMap="com.workmotion.app.project.dao.CrewDAO.getMember">
+
+        </collection>
+    </resultMap>
+
+    <insert id="createTask" parameterType="TaskDTO">
+        <selectKey keyProperty="id" resultType="Long" order="BEFORE">
+            SELECT TASK_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO TASK (ID, NAME, CREATE_DT, PROJECT_ID, CONTENT, WRITER_ID, START_DT, END_DT, HAS_LIMIT, STATUS,
+        HAS_SCHEDULE)
+        VALUES (#{id}, #{name}, CURRENT_DATE, #{project_id}, #{content}, #{writer_id},
+        #{start},
+        #{end},
+        #{has_limit}, 0, #{has_schedule})
+    </insert>
+
+    <update id="updateTask" parameterType="TaskDTO">
+        UPDATE TASK
+        <set>
+            <if test="name != null">
+                name = #{name},
+            </if>
+            <if test="content != null">
+                content = #{content},
+            </if>
+            <if test="start != null">
+                start_dt = #{start},
+            </if>
+            <if test="end != null">
+                end_dt = #{end},
+            </if>
+            <if test="has_limit != null">
+                has_limit = #{has_limit},
+            </if>
+            <if test="has_schedule != null">
+                has_schedule = #{has_schedule},
+            </if>
+            <if test="status != null">
+                status = #{status}
+            </if>
+        </set>
+        WHERE ID = #{id}
+    </update>
+
+    <delete id="deleteTask" parameterType="TaskDTO">
+        DELETE FROM TASK WHERE ID = #{id}
+    </delete>
+
+    <select id="getTaskDetail" parameterType="TaskDTO" resultMap="getResult">
+        <include refid="getTask"></include>
+        WHERE t.ID = #{id}
+    </select>
+
+    <insert id="addCharge" parameterType="Map">
+        INSERT INTO TASK_MEMBER (MEMBER_ID,TASK_ID)
+        <foreach collection="charge.split(',')" item="member_id" separator="UNION ALL">
+            SELECT #{member_id}, #{task_id} FROM DUAL
+        </foreach>
+    </insert>
+
+    <delete id="removeCharge" parameterType="TaskDTO">
+        DELETE FROM TASK_MEMBER WHERE TASK_ID = #{id}
+    </delete>
+
+    <update id="changeStatus" parameterType="TaskDTO">
+        UPDATE TASK SET STATUS = #{status} WHERE ID = #{id}
+    </update>
+
+</mapper>

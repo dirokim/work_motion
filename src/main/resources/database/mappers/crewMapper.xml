@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.workmotion.app.project.dao.CrewDAO">
+    <sql id="getMember">
+        SELECT
+        m.id member_id,
+        m.role_id member_role_id,
+        m.company_id member_company_id,
+        m.email member_email,
+        m.name member_name,
+        m.department_id member_department_id,
+        m.position_id member_position_id,
+        m.phone member_phone,
+        r.name as role_name,
+        d.name as department_name,
+        d.phone_num as department_phone_num,
+        p.name as position_name,
+        a.name as avatar_name,
+        a.ori_name as avatar_ori_name,
+        com.name as company_name,
+        com.owner as company_owner,
+        com.phone_num as company_phone_num,
+        com.info as company_info,
+        com.create_dt as company_create_dt
+        ${alias}
+        FROM MEMBER m
+        LEFT JOIN ROLE r ON m.ROLE_ID = r.ID
+        LEFT JOIN DEPARTMENT d ON m.DEPARTMENT_ID = d.ID
+        LEFT JOIN POSITION p ON m.POSITION_ID = p.ID
+        LEFT JOIN AVATAR a ON a.MEMBER_ID = m.ID
+        LEFT JOIN COMPANY com ON m.COMPANY_ID = com.ID
+    </sql>
+
+    <resultMap id="getMember" type="MemberDTO" autoMapping="true">
+        <id property="id" column="member_id"/>
+        <result property="role_id" column="member_role_id"/>
+        <result property="company_id" column="member_company_id"/>
+        <result property="email" column="member_email"/>
+        <result property="name" column="member_name"/>
+        <result property="department_id" column="member_department_id"/>
+        <result property="position_id" column="member_position_id"/>
+        <result property="phone" column="member_phone"/>
+        <association property="role" javaType="RoleDTO" columnPrefix="role_" autoMapping="true"/>
+        <association property="department" javaType="DepartmentDTO" columnPrefix="department_" autoMapping="true"/>
+        <association property="position" javaType="positionDTO" columnPrefix="position_" autoMapping="true"/>
+        <association property="avatar" javaType="Avatar" columnPrefix="avatar_" autoMapping="true"/>
+        <association property="company" javaType="CompanyDTO" columnPrefix="company_" autoMapping="true"/>
+    </resultMap>
+
+    <insert id="addCrew" parameterType="Map">
+        INSERT INTO CREW (MEMBER_ID, PROJECT_ID)
+        <foreach collection="member_ids.split(',')" item="member_id" separator="UNION ALL">
+            SELECT #{member_id}, #{project_id} FROM DUAL
+        </foreach>
+    </insert>
+
+    <select id="getCrewList" parameterType="ProjectDTO" resultMap="getMember">
+        <include refid="getMember">
+            <property name="alias" value=""/>
+        </include>
+        LEFT JOIN CREW c
+        ON c.MEMBER_ID = m.ID
+        WHERE c.PROJECT_ID = #{id}
+        ORDER BY m.COMPANY_ID, m.ROLE_ID ASC
+    </select>
+
+    <select id="getOwner" parameterType="ProjectDTO" resultMap="getMember">
+        <include refid="getMember">
+            <property name="alias" value=""/>
+        </include>
+        LEFT JOIN PROJECT pj ON pj.OWNER_ID = m.ID
+        WHERE pj.ID = #{id}
+    </select>
+
+    <select id="getCrewDetail" parameterType="Map" resultMap="getMember">
+        <include refid="getMember">
+            <property name="alias" value=""/>
+        </include>
+        LEFT JOIN CREW c
+        ON c.MEMBER_ID = m.ID
+        WHERE c.PROJECT_ID = #{project_id} AND c.MEMBER_ID = #{member_id}
+    </select>
+
+    <delete id="removeCrew" parameterType="Map">
+        DELETE FROM CREW WHERE PROJECT_ID = #{project_id} AND MEMBER_ID IN
+        <foreach collection="member_ids.split(',')" item="member_id" open="(" separator="," close=")">
+            #{member_id}
+        </foreach>
+    </delete>
+    <!--  프로젝트에 속하지 않는 멤버 리스트  -->
+    <select id="getMemberList" parameterType="ProjectDTO" resultMap="getMember">
+        <include refid="getMember">
+            <property name="alias" value=""/>
+        </include>
+        LEFT JOIN CREW cw ON m.ID = cw.MEMBER_ID AND cw.PROJECT_ID = #{id}
+        LEFT JOIN PROJECT pj ON m.ID = pj.OWNER_ID AND pj.ID = #{id}
+        WHERE cw.MEMBER_ID IS NULL
+        AND pj.OWNER_ID IS NULL
+        AND m.COMPANY_ID =
+        (SELECT COMPANY_ID FROM "MEMBER" m2 LEFT JOIN PROJECT pj ON m2.ID = pj.OWNER_ID WHERE pj.ID = #{id})
+        ORDER BY m.COMPANY_ID, m.ROLE_ID ASC
+    </select>
+
+    <!-- 자신을 제외한 모든 멤버 -->
+    <select id="getAllMemberList" parameterType="MemberDTO" resultMap="getMember">
+        <include refid="getMember">
+            <property name="alias" value=""/>
+        </include>
+        WHERE m.ID != #{id} AND m.COMPANY_ID = #{company_id}
+        ORDER BY m.COMPANY_ID, m.ROLE_ID ASC
+    </select>
+</mapper>

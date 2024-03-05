@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.workmotion.app.chat.ChatDAO">
+    <insert id="createRoom" parameterType="RoomInfoDTO">
+        INSERT INTO ROOM (name) VALUES (#{room_name})
+    </insert>
+    <insert id="addMember" parameterType="Map">
+        <foreach collection="members.split(',')" item="member_id" separator=";">
+            INSERT INTO ROOM_MEMBER (MEMBER_ID, ROOM_NAME, JOIN_DT, RECENTLY_DT, NAME, AVATAR)
+            SELECT #{member_id}, #{room_name}, CURRENT_TIMESTAMP, CURRENT_DATE, #{name},
+            (SELECT NAME FROM AVATAR WHERE MEMBER_ID = #{avatar}) FROM DUAL
+            WHERE NOT EXISTS (
+            SELECT 1 FROM ROOM_MEMBER WHERE MEMBER_ID = #{member_id} AND ROOM_NAME = #{room_name}
+            )
+        </foreach>
+    </insert>
+    <select id="getRoom" parameterType="RoomInfoDTO" resultType="RoomDTO">
+        SELECT * FROM ROOM WHERE NAME = #{room_name}
+    </select>
+    <insert id="sendMessage" parameterType="MessageDTO">
+        INSERT INTO MESSAGE (ID, MESSAGE, TIME, SENDER_ID, ROOM_NAME, TYPE)
+        VALUES (MESSAGE_SEQ.NEXTVAL, #{message}, CURRENT_TIMESTAMP, #{sender_id}, #{room_name}, #{type})
+    </insert>
+    <update id="updateRoomInfo" parameterType="RoomInfoDTO">
+        UPDATE ROOM_MEMBER
+        <set>
+            <if test="join_dt != null">
+                JOIN_DT = #{join_dt},
+            </if>
+            <if test="name != null">
+                name = #{name},
+            </if>
+            RECENTLY_DT = CURRENT_TIMESTAMP
+        </set>
+        WHERE MEMBER_ID = #{member_id} AND ROOM_NAME = #{room_name}
+    </update>
+    <select id="getMessage" parameterType="Map" resultMap="getUserRooms">
+        SELECT * FROM
+        (
+        SELECT
+        ROWNUM rn, m.*, mv.*
+        FROM MESSAGE m
+        LEFT JOIN ROOM_MEMBER rm ON m.ROOM_NAME = rm.ROOM_NAME AND rm.ROOM_NAME LIKE #{roomInfo.room_name}
+        LEFT JOIN MEMBER_VIEW mv ON m.SENDER_ID = mv.MEMBER_ID
+        WHERE rm.MEMBER_ID = #{roomInfo.member_id} AND rm.RECENTLY_DT &lt;= m."TIME" AND m."TIME" > rm.JOIN_DT
+        UNION ALL
+        SELECT * FROM
+        (
+        SELECT ROWNUM rn, b.* FROM
+        (
+        SELECT
+        m.*, mv.*
+        FROM MESSAGE m
+        LEFT JOIN ROOM_MEMBER rm ON m.ROOM_NAME = rm.ROOM_NAME AND rm.ROOM_NAME LIKE #{roomInfo.room_name}
+        LEFT JOIN MEMBER_VIEW mv ON m.SENDER_ID = mv.MEMBER_ID
+        WHERE rm.MEMBER_ID = #{roomInfo.member_id} AND rm.RECENTLY_DT &gt; m."TIME" AND m."TIME" > rm.JOIN_DT
+        ORDER BY m.TIME DESC
+        ) b
+        ) a
+        WHERE a.rn BETWEEN #{pager.startNum} AND #{pager.lastNum}
+        )
+        ORDER BY "TIME" ASC
+    </select>
+    <select id="getRoomInfo" parameterType="RoomInfoDTO" resultType="RoomInfoDTO">
+        SELECT * FROM ROOM_MEMBER WHERE ROOM_NAME = #{room_name} AND MEMBER_ID = #{member_id}
+    </select>
+    <resultMap id="getUserRooms" type="MessageDTO" autoMapping="true">
+        <id column="id" property="id"/>
+        <association property="sender" javaType="MemberDTO"
+                     resultMap="com.workmotion.app.project.dao.CrewDAO.getMember" autoMapping="true"/>
+        <association property="roomInfo" javaType="RoomInfoDTO" autoMapping="true">
+            <result column="name" property="name"/>
+            <result column="room_avatar" property="avatar"/>
+        </association>
+    </resultMap>
+    <select id="getUserRoom" parameterType="MemberDTO" resultMap="getUserRooms">
+        WITH LatestMessages AS (
+        SELECT ROOM_NAME, MAX(TIME) AS latest_time
+        FROM MESSAGE
+        GROUP BY ROOM_NAME
+        ),
+        NewMessageCounts AS (
+        SELECT rm.ROOM_NAME, COUNT(msg.MESSAGE) AS NEW_MESSAGE_COUNT
+        FROM MESSAGE msg
+        JOIN ROOM_MEMBER rm ON msg.ROOM_NAME = rm.ROOM_NAME
+        WHERE msg."TIME" > rm.RECENTLY_DT AND SENDER_ID != #{id}
+        GROUP BY rm.ROOM_NAME
+        ),
+        RoomsWithMember AS (
+        SELECT m.*, rm.ROOM_NAME, rm.name, ms.MESSAGE,ms.TYPE, ms."TIME", rm.AVATAR as room_avatar
+        FROM MEMBER_VIEW m
+        JOIN ROOM_MEMBER rm ON rm.MEMBER_ID = m.MEMBER_ID
+        JOIN MESSAGE ms ON rm.ROOM_NAME = ms.ROOM_NAME
+        JOIN LatestMessages lm ON ms.ROOM_NAME = lm.ROOM_NAME AND ms."TIME" = lm.latest_time and ms."TIME" > rm.JOIN_DT
+        WHERE m.MEMBER_ID = #{id} AND rm.ROOM_NAME LIKE '%' || #{id} || '%'
+        )
+        SELECT a.*, cnt.NEW_MESSAGE_COUNT
+        FROM RoomsWithMember a
+        LEFT JOIN NewMessageCounts cnt ON a.ROOM_NAME = cnt.ROOM_NAME
+        ORDER BY a."TIME" DESC
+    </select>
+    <select id="getRoomUsers" resultType="MemberDTO" parameterType="RoomInfoDTO">
+        SELECT MEMBER_ID as ID FROM ROOM_MEMBER WHERE ROOM_NAME = #{room_name} AND MEMBER_ID != #{member_id}
+    </select>
+    <delete id="exitRoom" parameterType="RoomInfoDTO">
+        DELETE FROM ROOM_MEMBER WHERE MEMBER_ID = #{member_id} AND ROOM_NAME = #{room_name}
+    </delete>
+</mapper>

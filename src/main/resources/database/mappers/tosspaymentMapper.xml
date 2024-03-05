@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+		<!DOCTYPE mapper
+		    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.workmotion.app.tosspayment.TossPaymentDAO">
+
+	<insert id="createTossPayment" parameterType="TossPaymentDTO">
+		INSERT INTO
+		tosspayment
+		VALUES(tosspayment_seq.nextval,#{orderId},#{amount},#{paymentKey},#{company_id},CURRENT_DATE,#{period})
+	</insert>
+
+	<select id="getTossPaymentDetail" resultType="TossPaymentDTO"
+		parameterType="TossPaymentDTO">
+		SELECT * FROM tosspayment
+		WHERE company_id = #{company_id}
+	</select>
+
+	<update id="updateTossPayment" parameterType="TossPaymentDTO">
+		UPDATE TOSSPAYMENT
+		SET
+		ORDERID = #{orderId},
+		AMOUNT = #{amount}, 
+		PAYMENTKEY =#{paymentKey},
+		period = #{period}
+		WHERE company_id = #{company_id}
+	</update>
+</mapper>

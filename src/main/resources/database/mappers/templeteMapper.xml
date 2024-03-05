@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+		<!DOCTYPE mapper
+		    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.workmotion.app.templete.TempleteDAO">
+
+	<sql id="search">
+		<where>
+			<if test="kind=='kind1' or kind=='kind3'">
+				ID LIKE '%'||#{search}||'%'
+			</if>
+			<if test="kind=='kind2' or kind=='kind3'">
+				OR FILE_NM LIKE '%'||#{search}||'%'
+			</if>
+		</where>
+	</sql>
+
+	<select id="getTempleteList" parameterType="Pager"
+		resultType="TempleteDTO">
+		SELECT * FROM
+		(SELECT ROWNUM T,TP.* FROM
+		(SELECT * FROM TEMPLETE
+		<include refid="search"></include>
+		ORDER BY ID DESC)TP)
+		WHERE T BETWEEN #{startRow} AND #{lastRow}
+	</select>
+
+	<select id="getTotalCount" resultType="Long">
+		SELECT COUNT(id) FROM TEMPLETE
+		<include refid="search"></include>
+	</select>
+
+	<insert id="createTempleteAdd" parameterType="TempleteDTO">
+		INSERT INTO
+		TEMPLETE
+		(ID,NAME,FILE_NM,ITEM)
+		VALUES
+		(TEMPLETE_SEQ.NEXTVAL,
+		#{name},#{file_nm},#{item})
+	</insert>
+
+	<select id="getTempleteDetail" resultType="TempleteDTO"
+		parameterType="TempleteDTO">
+		SELECT * FROM TEMPLETE WHERE ID = #{id}
+	</select>
+	
+	
+	
+	<!-- 직원이름,부서 검색  -->
+	<sql id="referrerSearch">
+		<where>		
+			<if test="kind=='kind2'">
+				M.name LIKE '%'||#{search}||'%'
+			</if>
+			<if test="kind=='kind1'">
+				OR D.NAME LIKE '%'||#{search}||'%'
+			</if>
+		</where>		
+	</sql>
+	
+	<!-- 직원 리스트 --> 
+	<select id="getReferrerList" parameterType="Pager" resultMap="referrerListResult">
+		SELECT * FROM
+			(SELECT ROWNUM R,MD.* FROM
+			(SELECT M.NAME AS name,M.ID, D.NAME AS department_name FROM MEMBER M 
+			FULL JOIN DEPARTMENT D
+			ON (M.DEPARTMENT_ID = D.ID)				
+			<include refid="referrerSearch"></include>		
+		 	ORDER BY D.ID DESC)MD)
+		 	WHERE R BETWEEN #{startRow} AND #{lastRow}							 
+	</select>
+	<resultMap type="MemberDTO" id="referrerListResult">
+		<id column="ID" property="id" />
+		<result column="ROLE_ID" property="role_id"/>
+		<result column="NAME" property="name"/>
+		<result column="DEPARTMENT_ID" property="department_id"/>		
+		<association property="department" javaType="DepartmentDTO" >
+			<id column="ID" property="id"/>
+			<result column="department_name" property="name"/>
+		</association>
+	</resultMap>		
+	
+	
+	<!-- 직원리스트 총페이지 --> 
+	<select id="getReferrerTotalCount" resultType="Long">
+		SELECT COUNT(M.id)  FROM MEMBER M 
+		FULL JOIN DEPARTMENT D
+		ON (M.DEPARTMENT_ID = D.ID)
+		<include refid="referrerSearch"></include>
+	</select> 
+
+</mapper>

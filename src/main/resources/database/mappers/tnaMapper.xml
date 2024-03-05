@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+		<!DOCTYPE mapper
+		    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+		    
+<mapper namespace="com.workmotion.app.tna.TnaDAO">
+
+	<!--출근-->
+	<insert id="getinTna" parameterType="MemberDTO">
+	INSERT INTO tna VALUES(TNA_SEQ.NEXTVAL,CURRENT_DATE,default,1,#{id},#{company_id})
+	</insert>
+	
+	<!--퇴근-->
+	<update id="getoutTna" parameterType="MemberDTO">
+	UPDATE tna
+	SET FINISH_TIME = CURRENT_DATE
+	WHERE MEMBER_ID = #{id}                
+	AND id = (SELECT MAX(id) FROM tna WHERE MEMBER_ID = #{id}) <!--서브쿼리 실행 -->
+	</update>
+	
+	<!--디테일 한사람의 출퇴근리스트 -->
+	<select id="getTnaDetail" parameterType="MemberDTO" resultType="Map">
+	SELECT * FROM TNA
+	WHERE MEMBER_ID = #{id} AND START_TIME &gt;= #{phone}
+	AND START_TIME &lt;= #{password}
+	</select>
+	
+
+
+
+
+
+
+
+
+
+
+
+</mapper>

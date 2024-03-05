@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.workmotion.app.board.BoardDAO">
+
+	<select id="totalCount" resultType="Long" parameterType="Pager">
+		SELECT
+		COUNT(*) FROM BOARD b
+		WHERE category_id = #{count} AND title LIKE '%'||#{search}||'%'
+	</select>
+
+	<select id="getBoardList" resultType="Map" parameterType="Map">
+		SELECT
+		* FROM
+		(
+		SELECT ROWNUM RG , A.* FROM
+		(
+		SELECT *
+		FROM BOARD B
+		LEFT JOIN
+		CATEGORY c
+		ON(B.category_id = c.id)
+		WHERE c.id = #{category.id} AND
+		B.TITLE LIKE '%'||#{pager.search}||'%'
+		) A
+		) R
+		WHERE RG BETWEEN
+		#{pager.startRow} AND #{pager.lastRow}
+	</select>
+
+	<select id="getBoardDetail" resultType="BoardDTO"
+		parameterType="BoardDTO">
+		SELECT * FROM BOARD
+		WHERE ID = #{id}
+	</select>
+
+	<insert id="create" parameterType="BoardDTO">
+		INSERT INTO BOARD
+		VALUES(BOARD_SEQ.NEXTVAL,#{title},#{content},0,CURRENT_DATE,41,#{category_id},#{writer})
+	</insert>
+
+	<update id="getViews" parameterType="BoardDTO">
+		UPDATE BOARD SET VIEWS = #{views}
+		WHERE id = #{id}
+	</update>
+
+	<update id="setUpdate" parameterType="BoardDTO">
+		UPDATE BOARD 
+		<set>
+		
+		<if test="title != null or title != ''">
+		title = #{title}, 
+		</if>
+		
+		<if test="content != null or content != ''">
+		content = #{content}
+		</if>
+		</set>
+		WHERE id = #{id}
+	</update>
+
+	<delete id="delete" parameterType="BoardDTO">
+		DELETE FROM BOARD
+		WHERE id = #{id}
+	</delete>
+
+
+</mapper>

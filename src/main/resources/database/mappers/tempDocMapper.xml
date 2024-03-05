@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+		<!DOCTYPE mapper
+		    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+		    
+<mapper namespace="com.workmotion.app.tempDoc.TempDocDAO">
+
+	 <!-- 임시저장 -->
+	 
+	 	 
+	 
+	 
+	 
+	 
+	
+	
+	
+	
+	<!-- 제목,서류종류별 검색  -->
+	<sql id="search">	
+		<where>	
+			<if test="kind=='kind1'">
+				D.TITLE LIKE '%'||#{search}||'%'
+			</if>
+			<if test="kind=='kind2'">
+				OR T.FILE_NM LIKE '%'||#{search}||'%'
+			</if>
+			and D.MEMBER_ID = #{member_id} AND D.TEMPORARY_SAVE = 1	
+		</where>			
+	</sql>
+	
+	<!-- 서류 검색 -->
+	<select id="getTempDocList" parameterType="Pager" resultMap="getTempDocResult">
+			SELECT * FROM
+				(SELECT ROWNUM T,DT.*FROM
+					(
+					SELECT D.ID,D.TITLE,D.CREATE_DT,T.FILE_NM FROM DOCUMENT D 
+					FULL JOIN TEMPLETE T
+					ON (D.TEMPLETE_ID = T.ID)
+					<include refid="search"></include>					
+					ORDER BY D.ID DESC
+					)DT
+				)
+			WHERE T BETWEEN #{startRow} AND #{lastRow}			
+	</select>
+	<resultMap type="DocumentDTO" id="getTempDocResult">
+		<id column="ID" property="id" />
+		<result column="TITLE" property="title"/>
+		<result column="CREATE_DT" property="create_dt"/>
+		<association property="templeteDTO" javaType="TempleteDTO">
+			<id column="ID" property="id"/>
+			<result column="FILE_NM" property="file_nm"/>
+		</association>	
+	</resultMap>
+
+	
+	<!-- 총 페이지 수  -->
+	<select id="getTotalCount" resultType="Long" parameterType="Pager">
+		SELECT COUNT(MEMBER_ID) FROM DOCUMENT D
+								FULL JOIN TEMPLETE T
+								ON (D.TEMPLETE_ID = T.ID)
+		<include refid="search"></include>  		
+	</select>
+
+	
+
+</mapper>

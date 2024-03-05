@@ -1,0 +1,195 @@
+#container {
+    height: 100%;
+    display: flex;
+    flex-direction: row;
+    font-family: "Noto Sans KR", sans-serif;
+}
+/* 캘린더 위의 해더 스타일(날짜가 있는 부분) */
+.fc-header-toolbar {
+    padding-top: 1em;
+    padding-left: 1em;
+    padding-right: 1em;
+}
+.section {
+    width: 100%;
+    overflow: scroll;
+}
+.section .projectInfo {
+    width: 100%;
+    background-color: white;
+}
+.section .projectInfo .top {
+    display: flex;
+    justify-content: space-between;
+}
+.section .projectInfo .head {
+    display: flex;
+    flex-direction: column;
+}
+.section .projectInfo .body {
+    margin: 0px;
+    display: flex;
+    margin-left: 10vh;
+}
+.section .projectInfo .body a {
+    margin-right: 2vh;
+    text-decoration: none;
+}
+.section .tabNav a {
+    color: black;
+}
+
+.section .projectInfo .body a:link {
+    color: black;
+}
+.section .projectInfo .body a:visited {
+    color: black;
+}
+
+.section .title {
+    font-size: xx-large;
+    font-weight: 900;
+}
+.article {
+    display: flex;
+    justify-content: space-around;
+    background-color: #f5f4f4;
+}
+.article #taskContentSection {
+    min-width: 60%;
+}
+.article .side {
+    background-color: white;
+    margin-top: 100px;
+    width: 40vh;
+    height: 500px;
+}
+.taskCard {
+    background-color: white;
+    margin: 10px;
+    border-radius: 20px;
+    border: 1px solid #c8c8c882;
+}
+.taskCard .cardHead {
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+}
+.taskCard .cardBody {
+    padding: 10px;
+}
+#crewList {
+    max-height: 31vh;
+    overflow: auto;
+}
+
+.card {
+    box-shadow: 0 0 2px 0 rgb(0 0 0 / 10%);
+    margin-bottom: 24px;
+}
+.card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    word-wrap: break-word;
+    background-color: #fff;
+    background-clip: border-box;
+    border: 1 solid #ecf2f5;
+    border-radius: 0.25rem;
+}
+.avatar-lg {
+    height: 4.5rem;
+    width: 4.5rem;
+}
+.rounded-circle {
+    border-radius: 50% !important;
+}
+.img-thumbnail {
+    padding: 0.25rem;
+    background-color: #ecf2f5;
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+    max-width: 100%;
+    height: auto;
+}
+.avatar-sm {
+    height: 2.25rem;
+    width: 2.25rem;
+}
+.rounded-circle {
+    border-radius: 50% !important;
+}
+.me-2 {
+    margin-right: 0.75rem !important;
+}
+.avatar-md {
+    height: 3.5rem;
+    width: 3.5rem;
+}
+.rounded-circle {
+    border-radius: 50% !important;
+}
+.bg-transparent {
+    --bs-bg-opacity: 1;
+    background-color: transparent !important;
+}
+.post-user-comment-box {
+    background-color: #f2f8fb;
+    margin: 0 -0.75rem;
+    padding: 1rem;
+    margin-top: 20px;
+}
+.simplebar-wrapper {
+    overflow: hidden;
+    width: inherit;
+    height: inherit;
+    max-width: inherit;
+    max-height: inherit;
+}
+.simplebar-height-auto-observer-wrapper {
+    box-sizing: inherit !important;
+    height: 100%;
+    width: 100%;
+    max-width: 1px;
+    position: relative;
+    float: left;
+    max-height: 1px;
+    overflow: hidden;
+    z-index: -1;
+    padding: 0;
+    margin: 0;
+    pointer-events: none;
+    flex-grow: inherit;
+    flex-shrink: 0;
+    flex-basis: 0;
+}
+.font-13 {
+    font-size: 13px !important;
+}
+.btn-soft-info {
+    color: #45bbe0;
+    background-color: rgba(69, 187, 224, 0.18);
+    border-color: rgba(69, 187, 224, 0.12);
+}
+.social-list-item {
+    height: 2rem;
+    width: 2rem;
+    line-height: calc(2rem - 2px);
+    display: block;
+    border: 2px solid #adb5bd;
+    border-radius: 50%;
+    color: #adb5bd;
+}
+.comment-area-btn {
+    display: flex;
+    justify-content: end;
+    height: fit-content;
+}
+.comment-area-box .comment-area-btn {
+    background-color: #f2f8fb;
+    padding: 10px;
+    border: 1px solid #dee2e6;
+    border-top: none;
+    border-radius: 0 0 0.2rem 0.2rem;
+}

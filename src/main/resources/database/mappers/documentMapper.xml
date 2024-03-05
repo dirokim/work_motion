@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+		<!DOCTYPE mapper
+		    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.workmotion.app.document.DocumentDAO">
+
+	<!-- 서류 자세히보기 -->
+	<select id="getDetail" resultMap="getDetailResult" parameterType="DocumentDTO">
+		SELECT D.*,M.ID MID,M.NAME MEMBER_NAME,P.ID PID,P.NAME POSITION_NAME,DF.ID DFID,DF.ORI_NAME,DF.NAME  FROM DOCUMENT D
+			RIGHT JOIN MEMBER M
+			ON (D.MEMBER_ID = M.ID)
+			RIGHT JOIN POSITION P
+			ON (P.ID = M.POSITION_ID)
+			FULL JOIN DOCUMENT_FILE DF
+			ON (DF.DOCUMENT_ID = D.ID)
+		WHERE D.ID = #{id}
+	</select>
+	<resultMap type="DocumentDTO" id="getDetailResult">
+		<id column="ID" property="id" />
+		<result column="TITLE" property="title" />
+		<result column="CONTENT" property="content" />
+		<result column="TEMPLETE_ID" property="templete_id" />
+		<result column="CREATE_DT" property="create_dt" />
+		<result column="MEMBER_ID" property="member_id" />
+		<result column="FILE_RANDOMNAME" property="file_randomname"/>
+			<association property="memberDTO" javaType="MemberDTO">
+				<id column="MID" property="id"/>
+				<result column="MEMBER_NAME" property="name"/>
+				<association property="position" javaType="PositionDTO">
+					<id column="PID" property="id"/>
+					<result column="POSITION_NAME" property="name"/>
+				</association>
+			</association>
+			<collection property="documentFileDTOs" javaType="List" ofType="DocumentFileDTO">
+				<id column="DFID" property="id" />
+				<result column="ORI_NAME" property="ori_name"/>
+				<result column="NAME" property="name"/>
+			</collection>		
+	</resultMap>
+	
+	<!-- 참조자 정보  -->
+	<select id="referrerDetail" resultMap="referrerResult" parameterType="DocumentDTO">
+		SELECT R.DOCUMENT_ID DOCUMENT_ID, M.NAME name, R.MEMBER_ID MEMBER_ID FROM REFERRER R 
+			  RIGHT JOIN MEMBER M
+		      ON(R.MEMBER_ID = M.ID)
+		WHERE DOCUMENT_ID = #{id}
+	</select>
+	<resultMap type="referrerDTO" id="referrerResult">
+		<result column="DOCUMENT_ID" property="document_id" />
+		<result column="MEMBER_ID" property="member_id" />
+		<association property="memberDTO" javaType="MemberDTO">					
+			<result column="NAME" property="name"/>
+		</association>			
+	</resultMap>
+	
+	<!-- 결재자 정보  -->
+	<select id="approvalDetail" parameterType="DocumentDTO" resultMap="approvalResult">
+		SELECT A.DOCUMENT_ID ,A.MEMBER_ID ,M.NAME MEMBER_NAME, D.NAME DEPARTMENT_NAME FROM APPROVAL A
+				RIGHT JOIN MEMBER M 
+				ON (A.MEMBER_ID = M.ID)
+				RIGHT  JOIN DEPARTMENT D
+				ON(D.ID = M.DEPARTMENT_ID)
+		WHERE DOCUMENT_ID  = #{id}
+	</select>	
+	<resultMap type="ApprovalDTO" id="approvalResult">
+		<id column="ID" property="id" />
+		<result column="DOCUMENT_ID" property="document_id" />
+		<result column="APPROVAL_DT" property="approval_dt" />
+		<result column="MEMBER_ID" property="member_id" />
+		<association property="memberDTO" javaType="MemberDTO">
+			<id column="ID" property="id"/>
+			<result column="MEMBER_NAME" property="name"/>
+			<association property="department" javaType="DepartmentDTO">
+				<id column="ID" property="id"/>
+				<result column="DEPARTMENT_NAME" property="name"/>	
+			</association>			
+		</association>
+	</resultMap>
+	
+	
+
+
+	<!-- 서류저장 -->
+	<insert id="createDocument" parameterType="DocumentDTO">
+		<selectKey keyProperty="id" order="BEFORE" resultType="Long">
+			SELECT DOCUMENT_SEQ.NEXTVAL FROM DUAL
+		</selectKey>
+		INSERT INTO DOCUMENT
+		(ID,TITLE,CONTENT,TEMPLETE_ID,CREATE_DT,MEMBER_ID,TEMPORARY_SAVE,PERIOD,PHONE,DEADLINE,FILE_RANDOMNAME)
+		VALUES
+		(#{id},#{title},#{content},#{templete_id},CURRENT_DATE,#{member_id},#{temporary_save},#{period,jdbcType=VARCHAR},#{phone,jdbcType=VARCHAR},#{deadline,jdbcType=DATE},#{file_randomname})
+	</insert>
+	<!-- 서류에 추가된 첨부파일 저장 -->
+	<insert id="createFiles" parameterType="DocumentFileDTO">
+		INSERT INTO DOCUMENT_FILE
+		VALUES(DOCUMENT_FILE_SEQ.NEXTVAL,#{document_id},#{name},#{ori_name})
+	</insert>
+	<!-- 서류에 추가된 참조자 저장 -->
+	<insert id="createReferrer" parameterType="ReferrerDTO">
+		INSERT INTO REFERRER
+		VALUES(#{document_id},#{member_id})
+	</insert>
+	<!-- 서류에 추가된 결재자 저장 -->
+	<insert id="createApproval" parameterType="ApprovalDTO">
+		INSERT INTO APPROVAL
+		values(APPROVAL_SEQ.NEXTVAL,#{document_id},CURRENT_DATE,#{member_id})
+	</insert>
+
+
+
+
+	<!-- 제목,서류종류별 검색 -->
+	<sql id="search">
+		<where>
+			<if test="kind=='kind1'">
+				D.TITLE LIKE '%'||#{search}||'%'
+			</if>
+			<if test="kind=='kind2'">
+				OR T.FILE_NM LIKE '%'||#{search}||'%'
+			</if>
+			and D.MEMBER_ID = #{member_id} AND D.TEMPORARY_SAVE = 0
+		</where>
+	</sql>
+
+	<!-- 서류 검색 -->
+	<select id="getDocumentList" parameterType="Pager"
+		resultMap="getDocumentResult">
+		SELECT * FROM
+		(SELECT ROWNUM T,DT.*FROM
+		(
+		SELECT D.ID DID,D.TITLE,D.CREATE_DT,T.ID TID,T.FILE_NM FROM DOCUMENT D
+		FULL JOIN TEMPLETE T
+		ON (D.TEMPLETE_ID = T.ID)
+		<include refid="search"></include>
+		ORDER BY D.ID DESC
+		)DT
+		)
+		WHERE T BETWEEN #{startRow} AND #{lastRow}
+	</select>
+	<resultMap type="DocumentDTO" id="getDocumentResult">
+		<id column="DID" property="id" />
+		<result column="TITLE" property="title" />
+		<result column="CREATE_DT" property="create_dt" />
+		<association property="templeteDTO" javaType="TempleteDTO">
+			<id column="TID" property="id" />
+			<result column="FILE_NM" property="file_nm" />
+		</association>
+	</resultMap>
+
+
+	<!-- 총 페이지 수 -->
+	<select id="getTotalCount" resultType="Long"
+		parameterType="Pager">
+		SELECT COUNT(MEMBER_ID) FROM DOCUMENT D
+		FULL JOIN TEMPLETE T
+		ON (D.TEMPLETE_ID = T.ID)
+		<include refid="search"></include>
+	</select>
+
+
+</mapper>

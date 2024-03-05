@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+		<!DOCTYPE mapper
+		    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+		    
+<mapper namespace="com.workmotion.app.approval.ApprovalDAO">
+
+	<!-- 작성자,제목 검색  -->
+	<sql id="search">
+		<where>		
+			<if test="kind=='kind1'">
+				M.NAME LIKE '%'||#{search}||'%'
+			</if>
+			<if test="kind=='kind2'">
+				OR D.TITLE LIKE '%'||#{search}||'%'
+			</if>
+			AND A.MEMBER_ID = #{member_id}
+			AND D.TEMPORARY_SAVE = 0
+		</where>				
+	</sql>
+
+	<!-- 참조인으로 저장된 서류 검색 -->
+	<select id="approvalGetList" parameterType="Pager" resultMap="approvalResult">
+		SELECT * FROM (
+			SELECT ROWNUM T,RD.* FROM(
+				(SELECT A.MEMBER_ID,D.ID,M.NAME,D.TITLE,D.CREATE_DT FROM APPROVAL A
+						FULL JOIN DOCUMENT D
+						ON (A.DOCUMENT_ID = D.ID)
+						FULL JOIN MEMBER M
+						ON (M.ID = D.MEMBER_ID)
+						<include refid="search"></include>						
+						ORDER BY D.CREATE_DT DESC
+						)RD
+					)
+				)
+		WHERE T BETWEEN #{startRow} AND #{lastRow}
+	</select>
+	<resultMap type="ApprovalDTO" id="approvalResult">
+			<id column="ID" property="id"/>
+			<result column="DOCUMENT_ID" property="document_id"/>
+			<result column="APPROVAL_DT" property="approval_dt"/>
+			<result column="MEMBER_ID" property="member_id"/>
+		<association property="documentDTO" javaType="DocumentDTO">
+			<id column="ID" property="id"/>
+			<result column="TITLE" property="title"/>
+			<result column="CREATE_DT" property="create_dt"/>
+		</association>
+		<association property="memberDTO" javaType="MemberDTO">
+			<id column="ID" property="id"/>
+			<result column="NAME" property="name"/>			
+		</association>						
+		
+	</resultMap>
+	
+	<!-- 총 페이지 수  -->
+	<select id="getTotalCount" resultType="Long" parameterType="Pager">
+		SELECT COUNT(A.MEMBER_ID)  FROM APPROVAL A
+						FULL JOIN DOCUMENT D
+						ON (A.DOCUMENT_ID = D.ID)
+						FULL JOIN MEMBER M
+						ON (M.ID = D.MEMBER_ID)
+		<include refid="search"></include>		
+	</select>
+	
+
+</mapper>

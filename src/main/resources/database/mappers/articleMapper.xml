@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.workmotion.app.project.dao.ArticleDAO">
+    <insert id="createArticle" parameterType="ArticleDTO">
+        INSERT INTO ARTICLE (ID,PROJECT_ID,TITLE,CONTENT,CREATE_DT,WRITER_ID)
+        VALUES (ARTICLE_SEQ.NEXTVAL, #{project_id}, #{title,jdbcType=VARCHAR}, #{content}, CURRENT_DATE, #{writer_id})
+    </insert>
+    <select id="getArticleList" parameterType="Map" resultMap="getArticleResult">
+        SELECT * FROM
+        (
+        SELECT ROWNUM rn, B.* FROM
+        (
+        <include refid="com.workmotion.app.project.dao.CrewDAO.getMember">
+            <property name="alias" value=",at.*"/>
+        </include>
+        LEFT JOIN ARTICLE at ON at.writer_id = m.id
+        WHERE at.project_id = #{project.id}
+        ORDER BY at.CREATE_DT DESC
+        ) B
+        )
+        <if test="pager != null">
+            WHERE rn BETWEEN #{pager.startNum} AND #{pager.lastNum}
+        </if>
+    </select>
+    <resultMap id="getArticleResult" type="ArticleDTO" autoMapping="true">
+        <id column="id" property="id"/>
+        <association property="writer" javaType="MemberDTO"
+                     resultMap="com.workmotion.app.project.dao.CrewDAO.getMember" autoMapping="true"/>
+    </resultMap>
+
+    <update id="updateArticle" parameterType="ArticleDTO">
+        UPDATE ARTICLE
+        <set>
+            <if test="title != null">
+                TITLE=#{title},
+            </if>
+            <if test="content != null">
+                CONTENT=#{content},
+            </if>
+            <if test="update_dt != null">
+                UPDATE_DT = #{update_dt}
+            </if>
+        </set>
+        WHERE ID = #{id}
+    </update>
+    <delete id="deleteArticle" parameterType="ArticleDTO">
+        DELETE FROM ARTICLE WHERE ID = #{id}
+    </delete>
+</mapper>

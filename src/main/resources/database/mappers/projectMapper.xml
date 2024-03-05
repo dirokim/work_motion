@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.workmotion.app.project.dao.ProjectDAO">
+    <sql id="getMember">
+        SELECT m.*, r.name as role_name, d.name as department_name, p.name as position_name
+        FROM MEMBER m
+        LEFT JOIN ROLE_ID r ON m.ROLE_ID = r.ID
+        LEFT JOIN DEPARTMENT_ID d ON m.DEPARTMENT_ID = d.ID
+        LEFT JOIN POSITION_ID p ON m.POSITION_ID = p.ID
+        WHERE m.ID = ${id}
+    </sql>
+    <insert id="createProject" parameterType="ProjectDTO">
+        <selectKey keyProperty="id" order="BEFORE" resultType="Long">
+            SELECT PROJECT_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO PROJECT (ID, NAME, CREATE_DT, INFO, OWNER_ID) VALUES (#{id}, #{name}, CURRENT_DATE,
+        #{info}, #{owner_id})
+    </insert>
+    <select id="getProjectList" parameterType="MemberDTO" resultMap="getProject">
+        <include refid="com.workmotion.app.project.dao.CrewDAO.getMember">
+            <property name="alias"
+                      value=",pj.ID project_id, pj.name project_name, pj.create_dt project_create_dt, pj.info project_info, pj.owner_id project_owner_id,cr.MEMBER_ID crew_id"/>
+        </include>
+        LEFT JOIN PROJECT pj ON pj.OWNER_ID != #{id} AND m.ID = pj.OWNER_ID
+        LEFT JOIN CREW cr ON cr.PROJECT_ID = pj.ID
+        WHERE pj.ID IS NOT NULL
+    </select>
+    <select id="getMyProjectList" parameterType="MemberDTO" resultMap="getProject">
+        <include refid="com.workmotion.app.project.dao.CrewDAO.getMember">
+            <property name="alias"
+                      value=",pj.ID project_id, pj.name project_name, pj.create_dt project_create_dt, pj.info project_info, pj.owner_id project_owner_id,cr.MEMBER_ID crew_id"/>
+        </include>
+        LEFT JOIN PROJECT pj ON pj.OWNER_ID = #{id} AND m.ID = pj.OWNER_ID
+        LEFT JOIN CREW cr ON cr.PROJECT_ID = pj.ID
+        WHERE pj.ID IS NOT NULL
+    </select>
+    <resultMap id="getProject" type="ProjectDTO" autoMapping="true">
+        <id column="PROJECT_ID" property="id"/>
+        <result column="PROJECT_NAME" property="name"/>
+        <result column="PROJECT_CREATE_DT" property="create_dt"/>
+        <result column="PROJECT_INFO" property="info"/>
+        <result column="PROJECT_OWNER_ID" property="owner_id"/>
+        <association property="owner" javaType="MemberDTO" autoMapping="true">
+            <id column="id" property="id"/>
+        </association>
+        <collection property="crews" javaType="List" ofType="MemberDTO" columnPrefix="crew_">
+            <id column="id" property="id"/>
+        </collection>
+    </resultMap>
+    <select id="getProjectDetail" parameterType="ProjectDTO" resultType="ProjectDTO">
+        SELECT p.*
+        FROM PROJECT p
+        LEFT JOIN MEMBER m
+        ON p.OWNER_ID = m.ID
+        WHERE p.ID = #{id}
+    </select>
+    <resultMap id="getProjectDetailResult" type="ProjectDTO">
+        <association property="role" javaType="RoleDTO">
+            <result column="role_name" property="name"/>
+        </association>
+        <association property="department" javaType="DepartmentDTO">
+            <result column="department_name" property="name"/>
+        </association>
+        <association property="position" javaType="positionDTO">
+            <result column="position_name" property="name"/>
+        </association>
+    </resultMap>
+
+    <delete id="deleteProject" parameterType="ProjectDTO">
+        DELETE FROM PROJECT WHERE ID = #{id}
+    </delete>
+
+    <update id="updateProject" parameterType="ProjectDTO">
+        UPDATE PROJECT SET NAME = #{name}, INFO = #{info}, OWNER_ID = #{owner_id} WHERE ID = #{id}
+    </update>
+
+    <update id="changeOwner" parameterType="ProjectDTO">
+        UPDATE PROJECT SET OWNER_ID = #{owner_id} WHERE ID = #{id}
+    </update>
+
+    <select id="getCharge" parameterType="TaskDTO" resultType="MemberDTO">
+        SELECT m.*
+        FROM TASK_MEMBER tm
+        LEFT JOIN MEMBER m
+        ON tm.MEMBER_ID = m.ID
+        WHERE tm.TASK_ID = #{id}
+    </select>
+</mapper>

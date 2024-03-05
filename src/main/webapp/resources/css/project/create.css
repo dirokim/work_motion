@@ -1,0 +1,75 @@
+body {
+    margin-top: 20px;
+    background: #f0f8ff;
+}
+.card {
+    margin-bottom: 1.5rem;
+    box-shadow: 0 1px 15px 1px rgba(52, 40, 104, 0.08);
+}
+.card {
+    position: relative;
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-direction: column;
+    flex-direction: column;
+    min-width: 0;
+    word-wrap: break-word;
+    background-color: #fff;
+    background-clip: border-box;
+    border: 1px solid #e5e9f2;
+    border-radius: 0.2rem;
+}
+.card-header:first-child {
+    border-radius: calc(0.2rem - 1px) calc(0.2rem - 1px) 0 0;
+}
+.card-header {
+    border-bottom-width: 1px;
+}
+.card-header {
+    padding: 0.75rem 1.25rem;
+    margin-bottom: 0;
+    color: inherit;
+    background-color: #fff;
+    border-bottom: 1px solid #e5e9f2;
+}
+
+#memberList {
+    height: 40vh;
+    overflow: auto;
+}
+#crewList {
+    height: 40vh;
+    overflow: auto;
+}
+.avatar-lg {
+    height: 4.5rem;
+    width: 4.5rem;
+}
+.rounded-circle {
+    border-radius: 50% !important;
+}
+.img-thumbnail {
+    padding: 0.25rem;
+    background-color: #ecf2f5;
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+    max-width: 100%;
+    height: auto;
+}
+.avatar-sm {
+    height: 2.25rem;
+    width: 2.25rem;
+}
+.rounded-circle {
+    border-radius: 50% !important;
+}
+.me-2 {
+    margin-right: 0.75rem !important;
+}
+.avatar-md {
+    height: 3.5rem;
+    width: 3.5rem;
+}
+.rounded-circle {
+    border-radius: 50% !important;
+}

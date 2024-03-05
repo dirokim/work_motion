@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+
+<configuration>
+    <settings>
+        <setting name="jdbcTypeForNull" value="NULL"/>
+    </settings>
+    <typeAliases>
+
+		<typeAlias type="com.workmotion.app.templete.TempleteDTO" alias="TempleteDTO"/>
+		<typeAlias type="com.workmotion.app.document.DocumentDTO" alias="DocumentDTO"/>	
+		<typeAlias type="com.workmotion.app.document.file.DocumentFileDTO" alias="DocumentFileDTO"/>
+		<typeAlias type="com.workmotion.app.referrer.ReferrerDTO" alias="ReferrerDTO"/> 
+		<typeAlias type="com.workmotion.app.approval.ApprovalDTO" alias="ApprovalDTO"/>   
+
+        <typeAlias type="com.workmotion.app.project.model.ProjectDTO" alias="ProjectDTO"/>
+        <typeAlias type="com.workmotion.app.company.CompanyDTO" alias="CompanyDTO"/>
+        <typeAlias type="com.workmotion.app.member.MemberDTO" alias="MemberDTO"/>
+        <typeAlias type="com.workmotion.app.position.PositionDTO" alias="PositionDTO"/>
+        <typeAlias type="com.workmotion.app.project.model.ProjectDTO" alias="ProjectDTO"/>
+        <typeAlias type="com.workmotion.app.project.model.RoleDTO" alias="RoleDTO"/>
+        <typeAlias type="com.workmotion.app.project.model.TaskDTO" alias="TaskDTO"/>
+        <typeAlias type="com.workmotion.app.project.model.ArticleDTO" alias="ArticleDTO"/>
+        <typeAlias type="com.workmotion.app.schedule.ScheduleDTO" alias="ScheduleDTO"/>
+        <typeAlias type="com.workmotion.app.chat.model.RoomDTO" alias="RoomDTO"/>
+        <typeAlias type="com.workmotion.app.chat.model.MessageDTO" alias="MessageDTO"/>
+        <typeAlias type="com.workmotion.app.chat.model.RoomInfoDTO" alias="RoomInfoDTO"/>
+        <typeAlias type="com.workmotion.app.notification.NotificationDTO" alias="NotificationDTO"/>
+
+        <typeAlias type="com.workmotion.app.member.Avatar" alias="Avatar"/>
+        <typeAlias type="com.workmotion.app.util.Pager" alias="Pager"/>
+        <typeAlias type="com.workmotion.app.department.DepartmentDTO" alias="DepartmentDTO"/>
+        <typeAlias type="com.workmotion.app.company.CompanyDTO" alias="CompanyDTO"/>
+
+        <typeAlias type="com.workmotion.app.board.BoardDTO" alias="BoardDTO"/>
+        <typeAlias type="com.workmotion.app.product.ProductDTO" alias="ProductDTO"/>
+        <typeAlias type="com.workmotion.app.tosspayment.TossPaymentDTO" alias="TossPaymentDTO"/>
+
+
+    </typeAliases>
+</configuration>
